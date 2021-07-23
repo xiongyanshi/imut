@@ -1,19 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
 import re
-#import pysam
 import argparse
 import subprocess as sps
-
-#print(pysam.__version__)
 
 
 def find_mark(n_line, b_line, target):
     '''
-    find the index to place a ^ mark.
-    from number line, reference bases line and interested position
+    find the index to place a ^ mark, 0-based.
+    input:  number line, reference bases line and interested position
     '''
     match = re.search(r'\d+', n_line)
     n1 = int(match.group(0))        # number start the line.
@@ -27,10 +24,10 @@ def find_mark(n_line, b_line, target):
             n += 1
         if n == target:
             break
-
     #print(' '*index + '^')         # 0-based index.
-    #print(index)
+
     return index
+
 
 def line_core(line, index):
     '''
@@ -47,7 +44,9 @@ def line_core(line, index):
             break
         r += 1
     #print(l, r)
+
     return ' '*l + line[l:r] + ' '*(len(line)-r)
+
 
 def snv(tv_lines, mark_index, view_all):
 
@@ -80,16 +79,16 @@ def snv(tv_lines, mark_index, view_all):
         line = line_core(line, mark_index)
         print(line)
 
-    template = '{} {} {} {} {}: ' + \
-               '{:4d} {:4d} {:4d} {:4d} {:4d}\n'      + \
-               '{} {} {} {} {}: ' + \
-               '{:4d} {:4d} {:4d} {:4d} {:4d}'
+    template = '{} {} {} {} {}: {:4d} {:4d} {:4d} {:4d} {:4d}\n' + \
+               '{} {} {} {} {}: {:4d} {:4d} {:4d} {:4d} {:4d}'
     print(template.format(
            'A','C','G','T','N',
            base_n['A'], base_n['C'], base_n['G'], base_n['T'], base_n['N'],
            'a','c','g','t','*',
            base_n['a'], base_n['c'], base_n['g'], base_n['t'], base_n['*'],
            ))
+
+    return 0
 
 
 def main():
@@ -118,8 +117,10 @@ def main():
     if args['samtools']:
         SAMTOOLS = args['samtools'][0]
     else:
-        SAMTOOLS = sps.run('which samtools', shell=True,
-                            stdout=sps.PIPE).stdout.decode('utf-8').strip()
+        which_samtools = sps.run('which samtools', shell=True, stdout=sps.PIPE)
+        which_samtools.check_returncode()
+        SAMTOOLS = which_samtools.stdout.decode('utf-8').strip()
+
 
     cmd = 'export COLUMNS=201; '
     cmd += '{samtools} tview -d T -p {chrm}:{start} {bam} {ref}'.format(
@@ -131,6 +132,8 @@ def main():
 
     if func == 'snv':
         snv(tv_lines, mark_index, view_all)
+    elif func == 'indel':
+        indel(tv_lines, mark_index, view_all)
 
 
 if __name__ == '__main__':
