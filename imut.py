@@ -90,6 +90,15 @@ def snv(tv_lines, mark_index, view_all):
 
     return 0
 
+def indel(tv_lines, mark_index, view_all):
+    print(tv_lines[0])
+    print(tv_lines[1])
+    print(tv_lines[2])
+    for line in tv_lines[3:]:
+        line = line_core(line, mark_index)
+        if set(list(line.strip())).issubset(set('.,')):
+            continue
+        print(line)
 
 def main():
 
