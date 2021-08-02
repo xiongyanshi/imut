@@ -106,13 +106,18 @@ def main():
 
     parser.add_argument('func', choices=['snv','indel'], nargs=1,
                         help='"snv" or "indel"')
-    parser.add_argument('bam', nargs=1, help='bam file')
-    parser.add_argument('ref', nargs=1, help='reference fasta, like: hg19.fa')
-    parser.add_argument('loc', nargs=1, help='like: chr1:10000')
+    parser.add_argument('bam', nargs=1,
+                        help='bam file')
+    parser.add_argument('loc', nargs=1,
+                        help='like: chr1:10000')
     parser.add_argument('-a', '--all', action='store_true',
                         help='enable to view alt (default) and ref reads')
-    parser.add_argument('-s', '--samtools', nargs='?', help='samtools bin')
-    parser.add_argument('--output', nargs='?', help='text file write into')
+    parser.add_argument('-s', '--samtools', nargs='?',
+                        help='samtools bin')
+    parser.add_argument('-g', '--genome', nargs='?',
+                        help='reference fasta, like: hg19.fa')
+    parser.add_argument('--output', nargs='?',
+                        help='text file write into')
 
     args = vars(parser.parse_args())
 
@@ -130,6 +135,12 @@ def main():
         which_samtools.check_returncode()
         SAMTOOLS = which_samtools.stdout.decode('utf-8').strip()
 
+    if args['genome']:
+        ref = args['genome'][0]
+    else:
+        echo_hg19 = sps.run('echo $hg19', shell=True, stdout=sps.PIPE)
+        echo_hg19.check_returncode()
+        ref = echo_hg19.stdout.decode('utf-8').strip()
 
     cmd = 'export COLUMNS=201; '
     cmd += '{samtools} tview -d T -p {chrm}:{start} {bam} {ref}'.format(
